@@ -1,103 +1,358 @@
-import Image from "next/image";
+'use client'
+
+import React from 'react'
+import styled from 'styled-components'
+
+// Styled Components
+const Container = styled.div`
+  min-height: 100vh;
+  background: #f5f5f5;
+`
+
+const HeroSection = styled.section`
+  height: 60vh;
+  background-image: url('https://cdn.pixabay.com/photo/2021/10/10/03/21/stock-market-6695489_1280.jpg');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+  }
+`
+
+const HeroContent = styled.div`
+  position: relative;
+  z-index: 2;
+  color: white;
+  max-width: 800px;
+  padding: 0 20px;
+`
+
+const HeroTitle = styled.h1`
+  font-size: 4rem;
+  font-weight: 300;
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+  
+  @media (max-width: 768px) {
+    font-size: 2.5rem;
+  }
+`
+
+const HeroSubtitle = styled.p`
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  opacity: 0.9;
+  
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
+`
+
+const HeroButton = styled.button`
+  background: #e67e22;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: #d35400;
+    transform: translateY(-2px);
+  }
+`
+
+const Navigation = styled.nav`
+  background: white;
+  padding: 20px 0;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+`
+
+const NavList = styled.ul`
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 40px;
+  
+  @media (max-width: 768px) {
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+`
+
+const NavItem = styled.li`
+  color: #7f8c8d;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  
+  &:hover {
+    color: #2c3e50;
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
+`
+
+const MainContent = styled.main`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 20px;
+`
+
+const SectionTitle = styled.h2`
+  font-size: 2rem;
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 50px;
+  font-weight: 400;
+`
+
+const FeaturedGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 80px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+const RecentGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+`
+
+const Card = styled.article`
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+`
+
+const CardImage = styled.div<{ $bgImage: string; $height?: string }>`
+  height: ${props => props.$height || '200px'};
+  background-image: url(${props => props.$bgImage});
+  background-size: cover;
+  background-position: center;
+  position: relative;
+`
+
+const CategoryTag = styled.span<{ $color: string }>`
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: ${props => props.$color};
+  color: white;
+  padding: 5px 15px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+`
+
+const CardContent = styled.div`
+  padding: 25px;
+`
+
+const CardTitle = styled.h3`
+  font-size: 1.5rem;
+  color: #2c3e50;
+  margin-bottom: 15px;
+  font-weight: 400;
+  line-height: 1.4;
+`
+
+const CardDescription = styled.p`
+  color: #7f8c8d;
+  line-height: 1.6;
+  margin-bottom: 20px;
+`
+
+const CardMeta = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`
+
+const Author = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`
+
+const AuthorAvatar = styled.div`
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #bdc3c7;
+`
+
+const AuthorName = styled.span`
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 0.9rem;
+`
+
+const PostDate = styled.span`
+  color: #95a5a6;
+  font-size: 0.9rem;
+`
+
+// Sample data
+const featuredPosts = [
+  {
+    id: 1,
+    title: "The Road Ahead",
+    description: "The road ahead might be paved - it might not be.",
+    image: "https://images.unsplash.com/photo-1465447142348-e9952c393450?w=600&h=300&fit=crop",
+    category: "PHOTOGRAPHY",
+    categoryColor: "#9b59b6",
+    author: "Mat Vogels",
+    date: "September 25, 2015"
+  },
+  {
+    id: 2,
+    title: "From Top Down",
+    description: "Once a year, go someplace you've never been before.",
+    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=300&fit=crop",
+    category: "ADVENTURE",
+    categoryColor: "#e67e22",
+    author: "William Wong",
+    date: "September 25, 2015"
+  }
+]
+
+const recentPosts = [
+  {
+    id: 3,
+    title: "Still Standing Tall",
+    description: "Life begins at the end of your comfort zone.",
+    image: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=200&fit=crop",
+    category: "NATURE",
+    categoryColor: "#f39c12",
+    author: "William Wong",
+    date: "September 25, 2015"
+  },
+  {
+    id: 4,
+    title: "Sunny Side Up",
+    description: "No place is ever as bad as they tell you it's going to be.",
+    image: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&h=200&fit=crop",
+    category: "PHOTOGRAPHY",
+    categoryColor: "#9b59b6",
+    author: "Mat Vogels",
+    date: "September 25, 2015"
+  },
+  {
+    id: 5,
+    title: "Water Falls",
+    description: "We travel not to escape life, but for life not to escape us.",
+    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=200&fit=crop",
+    category: "RELAXATION",
+    categoryColor: "#1abc9c",
+    author: "Mat Vogels",
+    date: "September 25, 2015"
+  }
+]
+
+const navigationItems = ['Nature', 'Photography', 'Relaxation', 'Vacation', 'Travel', 'Adventure']
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    <Container>
+      <HeroSection>
+        <HeroContent>
+          <HeroTitle>HS's Financial News</HeroTitle>
+          <HeroSubtitle>Let's analyze the US financial and stock market together.</HeroSubtitle>
+          <HeroButton>View Latest Posts</HeroButton>
+        </HeroContent>
+      </HeroSection>
+      
+      <Navigation>
+        <NavList>
+          {navigationItems.map((item, index) => (
+            <NavItem key={index}>{item}</NavItem>
+          ))}
+        </NavList>
+      </Navigation>
+      
+      <MainContent>
+        <SectionTitle>Featured Posts</SectionTitle>
+        <FeaturedGrid>
+          {featuredPosts.map((post) => (
+            <Card key={post.id}>
+              <CardImage $bgImage={post.image} $height="300px">
+                <CategoryTag $color={post.categoryColor}>{post.category}</CategoryTag>
+              </CardImage>
+              <CardContent>
+                <CardTitle>{post.title}</CardTitle>
+                <CardDescription>{post.description}</CardDescription>
+                <CardMeta>
+                  <Author>
+                    <AuthorAvatar />
+                    <AuthorName>{post.author}</AuthorName>
+                  </Author>
+                  <PostDate>{post.date}</PostDate>
+                </CardMeta>
+              </CardContent>
+            </Card>
+          ))}
+        </FeaturedGrid>
+        
+        <SectionTitle>Most Recent</SectionTitle>
+        <RecentGrid>
+          {recentPosts.map((post) => (
+            <Card key={post.id}>
+              <CardImage $bgImage={post.image}>
+                <CategoryTag $color={post.categoryColor}>{post.category}</CategoryTag>
+              </CardImage>
+              <CardContent>
+                <CardTitle>{post.title}</CardTitle>
+                <CardDescription>{post.description}</CardDescription>
+                <CardMeta>
+                  <Author>
+                    <AuthorAvatar />
+                    <AuthorName>{post.author}</AuthorName>
+                  </Author>
+                  <PostDate>{post.date}</PostDate>
+                </CardMeta>
+              </CardContent>
+            </Card>
+          ))}
+        </RecentGrid>
+      </MainContent>
+    </Container>
+  )
 }
