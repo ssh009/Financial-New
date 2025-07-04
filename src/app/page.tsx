@@ -294,8 +294,8 @@ export default function Home() {
     <Container>
       <HeroSection>
         <HeroContent>
-          <HeroTitle>HS's Financial News</HeroTitle>
-          <HeroSubtitle>Let's analyze the US financial and stock market together.</HeroSubtitle>
+          <HeroTitle>HS&apos;s Financial News</HeroTitle>
+          <HeroSubtitle>Let&apos;s analyze the US financial and stock market together.</HeroSubtitle>
           <HeroButton>View Latest Posts</HeroButton>
         </HeroContent>
       </HeroSection>
