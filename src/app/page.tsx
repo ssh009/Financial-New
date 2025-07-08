@@ -1,7 +1,9 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
+import { NewsPost } from '../types/news'
+import { getFeaturedPosts, getRecentPosts } from '../lib/newsService'
 
 // Styled Components
 const Container = styled.div`
@@ -230,66 +232,98 @@ const PostDate = styled.span`
   font-size: 0.9rem;
 `
 
-// Sample data
-const featuredPosts = [
-  {
-    id: 1,
-    title: "The Road Ahead",
-    description: "The road ahead might be paved - it might not be.",
-    image: "https://images.unsplash.com/photo-1465447142348-e9952c393450?w=600&h=300&fit=crop",
-    category: "PHOTOGRAPHY",
-    categoryColor: "#9b59b6",
-    author: "Mat Vogels",
-    date: "September 25, 2015"
-  },
-  {
-    id: 2,
-    title: "From Top Down",
-    description: "Once a year, go someplace you've never been before.",
-    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=300&fit=crop",
-    category: "ADVENTURE",
-    categoryColor: "#e67e22",
-    author: "William Wong",
-    date: "September 25, 2015"
-  }
-]
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: #7f8c8d;
+  font-size: 1.1rem;
+`
 
-const recentPosts = [
-  {
-    id: 3,
-    title: "Still Standing Tall",
-    description: "Life begins at the end of your comfort zone.",
-    image: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=200&fit=crop",
-    category: "NATURE",
-    categoryColor: "#f39c12",
-    author: "William Wong",
-    date: "September 25, 2015"
-  },
-  {
-    id: 4,
-    title: "Sunny Side Up",
-    description: "No place is ever as bad as they tell you it's going to be.",
-    image: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&h=200&fit=crop",
-    category: "PHOTOGRAPHY",
-    categoryColor: "#9b59b6",
-    author: "Mat Vogels",
-    date: "September 25, 2015"
-  },
-  {
-    id: 5,
-    title: "Water Falls",
-    description: "We travel not to escape life, but for life not to escape us.",
-    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=200&fit=crop",
-    category: "RELAXATION",
-    categoryColor: "#1abc9c",
-    author: "Mat Vogels",
-    date: "September 25, 2015"
-  }
-]
+const ErrorContainer = styled.div`
+  background: #e74c3c;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  text-align: center;
+`
 
 const navigationItems = ['Nature', 'Photography', 'Relaxation', 'Vacation', 'Travel', 'Adventure']
 
+// 날짜 포맷팅 함수
+function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })
+}
+
 export default function Home() {
+  const [featuredPosts, setFeaturedPosts] = useState<NewsPost[]>([])
+  const [recentPosts, setRecentPosts] = useState<NewsPost[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const [featured, recent] = await Promise.all([
+          getFeaturedPosts(),
+          getRecentPosts(3)
+        ])
+        
+        setFeaturedPosts(featured)
+        setRecentPosts(recent)
+      } catch (err) {
+        console.error('Error loading data:', err)
+        setError('뉴스 데이터를 불러오는데 실패했습니다.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  if (loading) {
+    return (
+      <Container>
+        <HeroSection>
+          <HeroContent>
+            <HeroTitle>HS&apos;s Financial News</HeroTitle>
+            <HeroSubtitle>Let&apos;s analyze the US financial and stock market together.</HeroSubtitle>
+            <HeroButton>View Latest Posts</HeroButton>
+          </HeroContent>
+        </HeroSection>
+        <LoadingContainer>뉴스를 불러오는 중...</LoadingContainer>
+      </Container>
+    )
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <HeroSection>
+          <HeroContent>
+            <HeroTitle>HS&apos;s Financial News</HeroTitle>
+            <HeroSubtitle>Let&apos;s analyze the US financial and stock market together.</HeroSubtitle>
+            <HeroButton>View Latest Posts</HeroButton>
+          </HeroContent>
+        </HeroSection>
+        <MainContent>
+          <ErrorContainer>{error}</ErrorContainer>
+        </MainContent>
+      </Container>
+    )
+  }
+
   return (
     <Container>
       <HeroSection>
@@ -310,48 +344,56 @@ export default function Home() {
       
       <MainContent>
         <SectionTitle>Featured Posts</SectionTitle>
-        <FeaturedGrid>
-          {featuredPosts.map((post) => (
-            <Card key={post.id}>
-              <CardImage $bgImage={post.image} $height="300px">
-                <CategoryTag $color={post.categoryColor}>{post.category}</CategoryTag>
-              </CardImage>
-              <CardContent>
-                <CardTitle>{post.title}</CardTitle>
-                <CardDescription>{post.description}</CardDescription>
-                <CardMeta>
-                  <Author>
-                    <AuthorAvatar />
-                    <AuthorName>{post.author}</AuthorName>
-                  </Author>
-                  <PostDate>{post.date}</PostDate>
-                </CardMeta>
-              </CardContent>
-            </Card>
-          ))}
-        </FeaturedGrid>
+        {featuredPosts.length > 0 ? (
+          <FeaturedGrid>
+            {featuredPosts.map((post) => (
+              <Card key={post.id}>
+                <CardImage $bgImage={post.image_url} $height="300px">
+                  <CategoryTag $color={post.category_color}>{post.category}</CategoryTag>
+                </CardImage>
+                <CardContent>
+                  <CardTitle>{post.title}</CardTitle>
+                  <CardDescription>{post.description}</CardDescription>
+                  <CardMeta>
+                    <Author>
+                      <AuthorAvatar />
+                      <AuthorName>{post.author}</AuthorName>
+                    </Author>
+                    <PostDate>{formatDate(post.created_at)}</PostDate>
+                  </CardMeta>
+                </CardContent>
+              </Card>
+            ))}
+          </FeaturedGrid>
+        ) : (
+          <LoadingContainer>추천 뉴스가 없습니다.</LoadingContainer>
+        )}
         
         <SectionTitle>Most Recent</SectionTitle>
-        <RecentGrid>
-          {recentPosts.map((post) => (
-            <Card key={post.id}>
-              <CardImage $bgImage={post.image}>
-                <CategoryTag $color={post.categoryColor}>{post.category}</CategoryTag>
-              </CardImage>
-              <CardContent>
-                <CardTitle>{post.title}</CardTitle>
-                <CardDescription>{post.description}</CardDescription>
-                <CardMeta>
-                  <Author>
-                    <AuthorAvatar />
-                    <AuthorName>{post.author}</AuthorName>
-                  </Author>
-                  <PostDate>{post.date}</PostDate>
-                </CardMeta>
-              </CardContent>
-            </Card>
-          ))}
-        </RecentGrid>
+        {recentPosts.length > 0 ? (
+          <RecentGrid>
+            {recentPosts.map((post) => (
+              <Card key={post.id}>
+                <CardImage $bgImage={post.image_url}>
+                  <CategoryTag $color={post.category_color}>{post.category}</CategoryTag>
+                </CardImage>
+                <CardContent>
+                  <CardTitle>{post.title}</CardTitle>
+                  <CardDescription>{post.description}</CardDescription>
+                  <CardMeta>
+                    <Author>
+                      <AuthorAvatar />
+                      <AuthorName>{post.author}</AuthorName>
+                    </Author>
+                    <PostDate>{formatDate(post.created_at)}</PostDate>
+                  </CardMeta>
+                </CardContent>
+              </Card>
+            ))}
+          </RecentGrid>
+        ) : (
+          <LoadingContainer>최신 뉴스가 없습니다.</LoadingContainer>
+        )}
       </MainContent>
     </Container>
   )
