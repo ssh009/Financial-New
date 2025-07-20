@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { NewsPost } from '../types/news'
 import { getFeaturedPosts, getRecentPosts } from '../lib/newsService'
+import { getMockNewsByCategory, getFeaturedMockNews, getRecentMockNews } from '../data/mockNews'
 
 // Styled Components
 const Container = styled.div`
@@ -81,11 +82,12 @@ const HeroButton = styled.button`
 
 const Navigation = styled.nav`
   background: white;
-  padding: 20px 0;
-  border-bottom: 1px solid #eee;
+  padding: 0;
+  border-bottom: 1px solid #e1e5e8;
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 `
 
 const NavList = styled.ul`
@@ -94,26 +96,34 @@ const NavList = styled.ul`
   list-style: none;
   margin: 0;
   padding: 0;
-  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
   
   @media (max-width: 768px) {
-    gap: 20px;
-    flex-wrap: wrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding: 0 10px;
   }
 `
 
-const NavItem = styled.li`
-  color: #7f8c8d;
-  font-weight: 500;
+const NavItem = styled.li<{ $isActive?: boolean }>`
+  color: ${props => props.$isActive ? '#0066cc' : '#505050'};
+  font-weight: ${props => props.$isActive ? '600' : '500'};
+  font-size: 16px;
   cursor: pointer;
-  transition: color 0.3s ease;
+  transition: all 0.2s ease;
+  padding: 16px 24px;
+  border-bottom: 3px solid ${props => props.$isActive ? '#0066cc' : 'transparent'};
+  white-space: nowrap;
   
   &:hover {
-    color: #2c3e50;
+    color: #0066cc;
+    background: #f7f9fa;
   }
   
   @media (max-width: 768px) {
-    font-size: 0.9rem;
+    font-size: 14px;
+    padding: 12px 16px;
   }
 `
 
@@ -250,7 +260,15 @@ const ErrorContainer = styled.div`
   text-align: center;
 `
 
-const navigationItems = ['Nature', 'Photography', 'Relaxation', 'Vacation', 'Travel', 'Adventure']
+// 금융 뉴스 카테고리
+const newsCategories = [
+  { name: '전체', value: 'ALL' },
+  { name: '시장', value: 'MARKET' },
+  { name: '경제', value: 'ECONOMY' },
+  { name: '주식', value: 'STOCKS' },
+  { name: '암호화폐', value: 'CRYPTO' },
+  { name: '부동산', value: 'REALESTATE' }
+]
 
 // 날짜 포맷팅 함수
 function formatDate(dateString: string): string {
@@ -265,8 +283,21 @@ function formatDate(dateString: string): string {
 export default function Home() {
   const [featuredPosts, setFeaturedPosts] = useState<NewsPost[]>([])
   const [recentPosts, setRecentPosts] = useState<NewsPost[]>([])
+  const [categoryPosts, setCategoryPosts] = useState<NewsPost[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL')
+
+  // 카테고리 클릭 이벤트 핸들러
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategory(category)
+    
+    // 선택된 카테고리에 따라 뉴스 데이터 업데이트
+    const filteredNews = getMockNewsByCategory(category)
+    setCategoryPosts(filteredNews)
+    
+    console.log('선택된 카테고리:', category, '뉴스 개수:', filteredNews.length)
+  }
 
   useEffect(() => {
     async function loadData() {
@@ -274,13 +305,21 @@ export default function Home() {
         setLoading(true)
         setError(null)
         
-        const [featured, recent] = await Promise.all([
-          getFeaturedPosts(),
-          getRecentPosts(3)
-        ])
+        // 가짜 데이터 사용 (즉시 로딩)
+        const featured = getFeaturedMockNews()
+        const recent = getRecentMockNews(3)
+        const initialCategory = getMockNewsByCategory('ALL')
         
         setFeaturedPosts(featured)
         setRecentPosts(recent)
+        setCategoryPosts(initialCategory)
+        
+        console.log('초기 데이터 로딩 완료:', {
+          featured: featured.length,
+          recent: recent.length,
+          total: initialCategory.length
+        })
+        
       } catch (err) {
         console.error('Error loading data:', err)
         setError('뉴스 데이터를 불러오는데 실패했습니다.')
@@ -336,63 +375,107 @@ export default function Home() {
       
       <Navigation>
         <NavList>
-          {navigationItems.map((item, index) => (
-            <NavItem key={index}>{item}</NavItem>
+          {newsCategories.map((category) => (
+            <NavItem 
+              key={category.value}
+              $isActive={selectedCategory === category.value}
+              onClick={() => handleCategoryClick(category.value)}
+            >
+              {category.name}
+            </NavItem>
           ))}
         </NavList>
       </Navigation>
       
       <MainContent>
-        <SectionTitle>Featured Posts</SectionTitle>
-        {featuredPosts.length > 0 ? (
-          <FeaturedGrid>
-            {featuredPosts.map((post) => (
-              <Card key={post.id}>
-                <CardImage $bgImage={post.image_url} $height="300px">
-                  <CategoryTag $color={post.category_color}>{post.category}</CategoryTag>
-                </CardImage>
-                <CardContent>
-                  <CardTitle>{post.title}</CardTitle>
-                  <CardDescription>{post.description}</CardDescription>
-                  <CardMeta>
-                    <Author>
-                      <AuthorAvatar />
-                      <AuthorName>{post.author}</AuthorName>
-                    </Author>
-                    <PostDate>{formatDate(post.created_at)}</PostDate>
-                  </CardMeta>
-                </CardContent>
-              </Card>
-            ))}
-          </FeaturedGrid>
+        {selectedCategory === 'ALL' ? (
+          // 전체 카테고리 선택 시: Featured + Recent 표시
+          <>
+            <SectionTitle>Featured Posts</SectionTitle>
+            {featuredPosts.length > 0 ? (
+              <FeaturedGrid>
+                {featuredPosts.map((post) => (
+                  <Card key={post.id}>
+                    <CardImage $bgImage={post.image_url} $height="300px">
+                      <CategoryTag $color={post.category_color}>{post.category}</CategoryTag>
+                    </CardImage>
+                    <CardContent>
+                      <CardTitle>{post.title}</CardTitle>
+                      <CardDescription>{post.description}</CardDescription>
+                      <CardMeta>
+                        <Author>
+                          <AuthorAvatar />
+                          <AuthorName>{post.author}</AuthorName>
+                        </Author>
+                        <PostDate>{formatDate(post.created_at)}</PostDate>
+                      </CardMeta>
+                    </CardContent>
+                  </Card>
+                ))}
+              </FeaturedGrid>
+            ) : (
+              <LoadingContainer>추천 뉴스가 없습니다.</LoadingContainer>
+            )}
+            
+            <SectionTitle>Most Recent</SectionTitle>
+            {recentPosts.length > 0 ? (
+              <RecentGrid>
+                {recentPosts.map((post) => (
+                  <Card key={post.id}>
+                    <CardImage $bgImage={post.image_url}>
+                      <CategoryTag $color={post.category_color}>{post.category}</CategoryTag>
+                    </CardImage>
+                    <CardContent>
+                      <CardTitle>{post.title}</CardTitle>
+                      <CardDescription>{post.description}</CardDescription>
+                      <CardMeta>
+                        <Author>
+                          <AuthorAvatar />
+                          <AuthorName>{post.author}</AuthorName>
+                        </Author>
+                        <PostDate>{formatDate(post.created_at)}</PostDate>
+                      </CardMeta>
+                    </CardContent>
+                  </Card>
+                ))}
+              </RecentGrid>
+            ) : (
+              <LoadingContainer>최신 뉴스가 없습니다.</LoadingContainer>
+            )}
+          </>
         ) : (
-          <LoadingContainer>추천 뉴스가 없습니다.</LoadingContainer>
-        )}
-        
-        <SectionTitle>Most Recent</SectionTitle>
-        {recentPosts.length > 0 ? (
-          <RecentGrid>
-            {recentPosts.map((post) => (
-              <Card key={post.id}>
-                <CardImage $bgImage={post.image_url}>
-                  <CategoryTag $color={post.category_color}>{post.category}</CategoryTag>
-                </CardImage>
-                <CardContent>
-                  <CardTitle>{post.title}</CardTitle>
-                  <CardDescription>{post.description}</CardDescription>
-                  <CardMeta>
-                    <Author>
-                      <AuthorAvatar />
-                      <AuthorName>{post.author}</AuthorName>
-                    </Author>
-                    <PostDate>{formatDate(post.created_at)}</PostDate>
-                  </CardMeta>
-                </CardContent>
-              </Card>
-            ))}
-          </RecentGrid>
-        ) : (
-          <LoadingContainer>최신 뉴스가 없습니다.</LoadingContainer>
+          // 특정 카테고리 선택 시: 해당 카테고리 뉴스만 표시
+          <>
+            <SectionTitle>
+              {newsCategories.find(cat => cat.value === selectedCategory)?.name || '카테고리'} 뉴스
+            </SectionTitle>
+            {categoryPosts.length > 0 ? (
+              <RecentGrid>
+                {categoryPosts.map((post) => (
+                  <Card key={post.id}>
+                    <CardImage $bgImage={post.image_url}>
+                      <CategoryTag $color={post.category_color}>{post.category}</CategoryTag>
+                    </CardImage>
+                    <CardContent>
+                      <CardTitle>{post.title}</CardTitle>
+                      <CardDescription>{post.description}</CardDescription>
+                      <CardMeta>
+                        <Author>
+                          <AuthorAvatar />
+                          <AuthorName>{post.author}</AuthorName>
+                        </Author>
+                        <PostDate>{formatDate(post.created_at)}</PostDate>
+                      </CardMeta>
+                    </CardContent>
+                  </Card>
+                ))}
+              </RecentGrid>
+            ) : (
+              <LoadingContainer>
+                {newsCategories.find(cat => cat.value === selectedCategory)?.name || '해당 카테고리'}의 뉴스가 없습니다.
+              </LoadingContainer>
+            )}
+          </>
         )}
       </MainContent>
     </Container>
