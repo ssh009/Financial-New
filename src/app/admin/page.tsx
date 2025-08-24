@@ -65,16 +65,16 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   }
 `
 
-const ResultContainer = styled.div<{ success?: boolean }>`
-  background: ${props => props.success ? '#d4edda' : '#f8d7da'};
-  border: 1px solid ${props => props.success ? '#c3e6cb' : '#f5c6cb'};
+const ResultContainer = styled.div<{ $success?: boolean }>`
+  background: ${props => props.$success ? '#d4edda' : '#f8d7da'};
+  border: 1px solid ${props => props.$success ? '#c3e6cb' : '#f5c6cb'};
   border-radius: 8px;
   padding: 20px;
   margin-top: 20px;
 `
 
-const ResultTitle = styled.h3<{ success?: boolean }>`
-  color: ${props => props.success ? '#155724' : '#721c24'};
+const ResultTitle = styled.h3<{ $success?: boolean }>`
+  color: ${props => props.$success ? '#155724' : '#721c24'};
   margin-bottom: 15px;
 `
 
@@ -183,6 +183,8 @@ export default function AdminPage() {
       })
       
       const data = await response.json()
+      console.log('API 응답:', data)
+      console.log('details 타입:', typeof data.details, 'isArray:', Array.isArray(data.details))
       setResult(data)
     } catch (error) {
       setResult({
@@ -246,8 +248,8 @@ export default function AdminPage() {
 
       {result && (
         <Section>
-          <ResultContainer success={result.success}>
-            <ResultTitle success={result.success}>
+          <ResultContainer $success={result.success}>
+            <ResultTitle $success={result.success}>
               {result.success ? '✅ 성공' : '❌ 실패'}
             </ResultTitle>
             
@@ -278,15 +280,21 @@ export default function AdminPage() {
               </StatGrid>
             )}
             
-            {result.details && result.details.length > 0 && (
+            {result.details && (
               <div>
                 <h4>상세 내역:</h4>
                 <DetailsList>
-                  {result.details.map((detail, index) => (
-                    <DetailItem key={index} type={getDetailType(detail)}>
-                      {detail}
+                  {Array.isArray(result.details) ? (
+                    result.details.map((detail, index) => (
+                      <DetailItem key={index} type={getDetailType(detail)}>
+                        {detail}
+                      </DetailItem>
+                    ))
+                  ) : (
+                    <DetailItem type="error">
+                      {typeof result.details === 'string' ? result.details : JSON.stringify(result.details)}
                     </DetailItem>
-                  ))}
+                  )}
                 </DetailsList>
               </div>
             )}

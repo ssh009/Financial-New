@@ -305,16 +305,18 @@ export default function Home() {
         setLoading(true)
         setError(null)
         
-        // 가짜 데이터 사용 (즉시 로딩)
-        const featured = getFeaturedMockNews()
-        const recent = getRecentMockNews(3)
+        // Supabase 데이터 로딩 (복원됨)
+        const [featured, recent] = await Promise.all([
+          getFeaturedPosts(),
+          getRecentPosts(3)
+        ])
         const initialCategory = getMockNewsByCategory('ALL')
         
         setFeaturedPosts(featured)
         setRecentPosts(recent)
         setCategoryPosts(initialCategory)
         
-        console.log('초기 데이터 로딩 완료:', {
+        console.log('Supabase 데이터 로딩 성공:', {
           featured: featured.length,
           recent: recent.length,
           total: initialCategory.length

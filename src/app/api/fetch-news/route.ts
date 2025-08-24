@@ -8,6 +8,11 @@ export async function POST() {
   try {
     console.log('=== Yahoo Finance 뉴스 수집 시작 ===')
     
+    // 환경 변수 디버깅
+    console.log('환경 변수 확인:')
+    console.log('SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '설정됨' : '없음')
+    console.log('SUPABASE_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '설정됨' : '없음')
+    
     // 1. Supabase 연결 테스트
     const processor = new NewsProcessor()
     const connectionOk = await processor.testConnection()

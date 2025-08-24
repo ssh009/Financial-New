@@ -48,7 +48,7 @@ export class NewsProcessor {
           category: item.category,
           category_color: this.getCategoryColor(item.category),
           author: 'Yahoo Finance',
-          source_url: item.link,
+          source_url: item.link, // ✅ 다시 활성화!
           published_date: new Date(item.pubDate).toISOString(),
           is_featured: this.shouldBeFeatured(item, savedCount) // 첫 번째 뉴스들을 featured로 설정
         }
@@ -126,9 +126,10 @@ export class NewsProcessor {
   // 테스트용 메서드 - Supabase 연결 확인
   async testConnection(): Promise<boolean> {
     try {
+      // 단순히 테이블에서 1개 레코드만 가져와서 연결 테스트
       const { data, error } = await supabase
         .from('news')
-        .select('count(*)')
+        .select('id')
         .limit(1)
 
       if (error) {
@@ -136,7 +137,7 @@ export class NewsProcessor {
         return false
       }
 
-      console.log('Supabase 연결 성공')
+      console.log('Supabase 연결 성공 - 테이블 접근 가능')
       return true
     } catch (error) {
       console.error('Supabase 연결 에러:', error)

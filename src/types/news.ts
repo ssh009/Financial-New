@@ -7,6 +7,7 @@ export interface NewsPost {
   category: string
   category_color: string
   author: string
+  source_url?: string // ✅ 추가된 필드!
   created_at: string
   published_date?: string
   is_featured?: boolean
