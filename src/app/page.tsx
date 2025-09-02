@@ -158,6 +158,76 @@ const RecentGrid = styled.div`
   gap: 30px;
 `
 
+// Dense Headline List (텍스트 우선)
+const HeadlineList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`
+
+const HeadlineItem = styled.article<{ $withThumb?: boolean }>`
+  display: grid;
+  grid-template-columns: ${props => props.$withThumb ? '56px 1fr' : '1fr'};
+  align-items: start;
+  gap: 12px;
+  background: white;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+`
+
+const ItemThumb = styled.div`
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  background-size: cover;
+  background-position: center;
+  background-color: #eef2f5;
+  overflow: hidden;
+`
+
+const ItemContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`
+
+const ItemTitle = styled.a`
+  color: #1f2d3d;
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  &:hover { text-decoration: underline; }
+`
+
+const ItemMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #7f8c8d;
+  font-size: 0.85rem;
+`
+
+const ItemCategory = styled.span<{ $color: string }>`
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: ${p => p.$color}22;
+  color: ${p => p.$color};
+  font-weight: 600;
+  font-size: 0.75rem;
+`
+
+const ItemSource = styled.span`
+  color: #607d8b;
+`
+
+const ItemTime = styled.time`
+  color: #95a5a6;
+`
+
 const Card = styled.article`
   background: white;
   border-radius: 10px;
@@ -278,6 +348,17 @@ function formatDate(dateString: string): string {
     month: 'long', 
     day: 'numeric' 
   })
+}
+
+// 파비콘 URL 생성
+function getFaviconUrl(sourceUrl?: string): string | null {
+  if (!sourceUrl) return null;
+  try {
+    const u = new URL(sourceUrl);
+    return `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=64`;
+  } catch {
+    return null;
+  }
 }
 
 export default function Home() {
@@ -419,28 +500,34 @@ export default function Home() {
               <LoadingContainer>추천 뉴스가 없습니다.</LoadingContainer>
             )}
             
-            <SectionTitle>Most Recent</SectionTitle>
+            <SectionTitle>Headlines</SectionTitle>
             {recentPosts.length > 0 ? (
-              <RecentGrid>
-                {recentPosts.map((post) => (
-                  <Card key={post.id}>
-                    <CardImage $bgImage={post.image_url}>
-                      <CategoryTag $color={post.category_color}>{post.category}</CategoryTag>
-                    </CardImage>
-                    <CardContent>
-                      <CardTitle>{post.title}</CardTitle>
-                      <CardDescription>{post.description}</CardDescription>
-                      <CardMeta>
-                        <Author>
-                          <AuthorAvatar />
-                          <AuthorName>{post.author}</AuthorName>
-                        </Author>
-                        <PostDate>{formatDate(post.created_at)}</PostDate>
-                      </CardMeta>
-                    </CardContent>
-                  </Card>
-                ))}
-              </RecentGrid>
+              <HeadlineList>
+                {recentPosts.map((post) => {
+                  const thumb = post.image_url || getFaviconUrl(post.source_url) || ''
+                  const hasThumb = Boolean(thumb)
+                  const titleEl = post.source_url ? (
+                    <ItemTitle href={post.source_url} target="_blank" rel="noopener noreferrer">{post.title}</ItemTitle>
+                  ) : (
+                    <ItemTitle as="span">{post.title}</ItemTitle>
+                  )
+                  return (
+                    <HeadlineItem key={post.id} $withThumb={hasThumb}>
+                      {hasThumb && (
+                        <ItemThumb style={{ backgroundImage: `url(${thumb})` }} />
+                      )}
+                      <ItemContent>
+                        {titleEl}
+                        <ItemMeta>
+                          <ItemCategory $color={post.category_color}>{post.category}</ItemCategory>
+                          {post.author && <ItemSource>{post.author}</ItemSource>}
+                          <ItemTime>{formatDate(post.created_at)}</ItemTime>
+                        </ItemMeta>
+                      </ItemContent>
+                    </HeadlineItem>
+                  )
+                })}
+              </HeadlineList>
             ) : (
               <LoadingContainer>최신 뉴스가 없습니다.</LoadingContainer>
             )}
@@ -452,26 +539,32 @@ export default function Home() {
               {newsCategories.find(cat => cat.value === selectedCategory)?.name || '카테고리'} 뉴스
             </SectionTitle>
             {categoryPosts.length > 0 ? (
-              <RecentGrid>
-                {categoryPosts.map((post) => (
-                  <Card key={post.id}>
-                    <CardImage $bgImage={post.image_url}>
-                      <CategoryTag $color={post.category_color}>{post.category}</CategoryTag>
-                    </CardImage>
-                    <CardContent>
-                      <CardTitle>{post.title}</CardTitle>
-                      <CardDescription>{post.description}</CardDescription>
-                      <CardMeta>
-                        <Author>
-                          <AuthorAvatar />
-                          <AuthorName>{post.author}</AuthorName>
-                        </Author>
-                        <PostDate>{formatDate(post.created_at)}</PostDate>
-                      </CardMeta>
-                    </CardContent>
-                  </Card>
-                ))}
-              </RecentGrid>
+              <HeadlineList>
+                {categoryPosts.map((post) => {
+                  const thumb = post.image_url || getFaviconUrl(post.source_url) || ''
+                  const hasThumb = Boolean(thumb)
+                  const titleEl = post.source_url ? (
+                    <ItemTitle href={post.source_url} target="_blank" rel="noopener noreferrer">{post.title}</ItemTitle>
+                  ) : (
+                    <ItemTitle as="span">{post.title}</ItemTitle>
+                  )
+                  return (
+                    <HeadlineItem key={post.id} $withThumb={hasThumb}>
+                      {hasThumb && (
+                        <ItemThumb style={{ backgroundImage: `url(${thumb})` }} />
+                      )}
+                      <ItemContent>
+                        {titleEl}
+                        <ItemMeta>
+                          <ItemCategory $color={post.category_color}>{post.category}</ItemCategory>
+                          {post.author && <ItemSource>{post.author}</ItemSource>}
+                          <ItemTime>{formatDate(post.created_at)}</ItemTime>
+                        </ItemMeta>
+                      </ItemContent>
+                    </HeadlineItem>
+                  )
+                })}
+              </HeadlineList>
             ) : (
               <LoadingContainer>
                 {newsCategories.find(cat => cat.value === selectedCategory)?.name || '해당 카테고리'}의 뉴스가 없습니다.
